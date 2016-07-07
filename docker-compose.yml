@@ -1,0 +1,117 @@
+version: '2'
+
+networks:
+  internal:
+    driver: bridge
+
+services:
+  pingbox:
+    image: chadmoon/nmap
+    networks:
+     internal:
+       aliases:
+        - nmap-alias
+
+  configdata:
+    image: debian:jessie
+    volumes:
+     - ./config:/opt/spinnaker/config
+
+  redis:
+    image: redis
+    networks:
+     internal:
+       aliases:
+        - redis-alias
+
+  cassandra:
+    image: cassandra:2.2.5
+    networks:
+     internal:
+       aliases:
+        - cassandra-alias
+    environment:
+      CASSANDRA_START_RPC: "true"
+
+  front50:
+    image: quay.io/spinnaker/front50
+    networks:
+     internal:
+       aliases:
+        - front50-alias
+    volumes_from:
+      - configdata
+
+  clouddriver:
+    image: quay.io/spinnaker/clouddriver
+    networks:
+     internal:
+       aliases:
+        - clouddriver-alias
+    volumes_from:
+     - configdata
+    volumes:
+     - /Users/chadmoon/.kube/config:/root/.kube/config
+     - /Users/chadmoon/.kube/minikube:/root/.kube/minikube
+     - /Users/chadmoon/.minikube/apiserver.crt:/root/.kube/apiserver.crt
+     - /Users/chadmoon/.minikube/apiserver.key:/root/.kube/apiserver.key
+    depends_on:
+     - front50
+     - redis
+
+  rosco:
+    image: quay.io/spinnaker/rosco
+    networks:
+     internal:
+       aliases:
+        - rosco-alias
+    depends_on:
+     - clouddriver
+    volumes_from:
+     - configdata
+
+  orca:
+    image: quay.io/spinnaker/orca
+    networks:
+     internal:
+       aliases:
+        - orca-alias
+    depends_on:
+     - rosco
+    volumes_from:
+     - configdata
+
+  echo:
+    image: quay.io/spinnaker/echo
+    networks:
+     internal:
+       aliases:
+        - echo-alias
+    depends_on:
+     - orca
+    volumes_from:
+     - configdata
+
+  gate:
+    image: quay.io/spinnaker/gate
+    networks:
+     internal:
+       aliases:
+        - gate-alias
+    depends_on:
+     - echo
+    volumes_from:
+     - configdata
+     
+  deck:
+    image: nginx
+    networks:
+      - internal
+      - default
+    depends_on:
+     - gate
+    volumes:
+     - ./deck:/opt/deck
+     - ./nginx.conf:/etc/nginx/nginx.conf
+    ports:
+     - "9000:80"
