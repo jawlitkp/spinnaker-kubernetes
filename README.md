@@ -1,6 +1,6 @@
 # Details
 
-This is a collection of scripts and a docker-compose file that helps streamline setting up Spinnaker.
+This is a collection of scripts and a docker-compose file that helps streamline setting up Spinnaker and connecting to a local kubernetes cluster.
 
 `config.py` pulls the the most recent configs from the metapackage config folder. It then injects various config options needed to be able to run each service in an independant container. This is helpful because as config files change, they will not be overwritten and break. Once the configs are injected they are saved to a config folder. These configs are then the "source of truth" if they need to be modified further. `config.py` also builds the most recent version of deck, and sets up settings.js to point to the correct bakery and gate endpoints.
 
@@ -14,8 +14,7 @@ This is a collection of scripts and a docker-compose file that helps streamline 
 3. Ensure you have 8GB memory provisioned for the vm if using docker for mac beta.
 
 # Instructions
-1. Clone repo and checkout the exp-dsb branch, navigate to experimental/docker-dsb
-1. Fill out key and secret inside `env.env` and rename to `.env`
-2. Run `python launch.py`
-3. Once complete a browser will launch with spinnaker running at `http://localhost:9000`
-4. To stop all of the Spinnaker services, run `docker-compose down`
+
+1. Run `python launch.py`
+2. Once complete a browsers will launch with spinnaker and kubernetes dashboard.
+3. To stop all of the Spinnaker services, run `docker-compose down`, to stop kubernetes run `minikube stop`

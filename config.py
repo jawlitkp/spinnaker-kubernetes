@@ -2,7 +2,7 @@ import yaml
 import os
 import time
 import collections
-
+from os.path import expanduser
 
 os.system("rm -rf upstream")
 os.system("rm -rf config")
@@ -75,7 +75,7 @@ clouddriver["server"].pop("address", None)
 
 #enable kubernetes
 clouddriver["kubernetes"]["enabled"] = True
-clouddriver["kubernetes"]["accounts"] = [{"name":"minikube","kubeconfigFile":"/root/.kube/minikube","cluster":"minikube","dockerRegistries":[{"accountName":"dockerhub"}]}]
+clouddriver["kubernetes"]["accounts"] = [{"name":"minikube","dockerRegistries":[{"accountName":"dockerhub"}]}]
 
 #enable registry
 clouddriver["dockerRegistry"]["enabled"] = True
@@ -128,11 +128,67 @@ with open('config/echo.yml', 'w') as yaml_file:
 with open('config/gate.yml', 'w') as yaml_file:
   yaml_file.write(yaml.dump(gate, default_flow_style=False))
 
-#build deck
+#build deck if it has not been built yet
+if os.path.isdir("deck") == False:
+  os.system("docker run -d -e CI=true -e API_HOST='/gate' -e BAKERY_DETAIL_URL='/bakery' --name spin-deck quay.io/spinnaker/deck")
+  os.system("docker exec -it spin-deck npm install")
+  os.system("docker exec -it spin-deck npm run build")
+  os.system("docker cp spin-deck:/deck/build/webpack `pwd`/deck")
+  os.system("docker stop spin-deck")
+  os.system("docker rm spin-deck")
 
-# os.system("docker run -d -e CI=true -e API_HOST='/gate' -e BAKERY_DETAIL_URL='/bakery' --name spin-deck quay.io/spinnaker/deck")
-# os.system("docker exec -it spin-deck npm install")
-# os.system("docker exec -it spin-deck npm run build")
-# os.system("docker cp spin-deck:/deck/build/webpack `pwd`/deck")
-# os.system("docker stop spin-deck")
-# os.system("docker rm spin-deck")
+#write minikube config file
+
+
+kubeConfig = {
+"apiVersion" : '1',
+"clusters" : {
+    {
+    "cluster" : {
+        "certificate-authority" : '/root/.kube/apiserver.crt',
+        "server" : 'https://192.168.99.100:443'
+      },
+    "name" : "minikube"
+    }
+  },
+"contexts" : [
+   {
+    "context" : {
+      {
+       "cluster" : "minikube",
+       "user" : "minikube"
+      }
+    },
+    "name" : "minikube"
+   }
+ ],
+"current-context" : 'minikube',
+"kind" : 'Config',
+"preferences" : '{}',
+"users" : [
+{
+"name" : "minikube",
+"user" : {
+  "client-certificate" : '/root/.kube/apiserver.crt',
+  "cliebnt-key" : '/root/.kube/apiserver.key'
+
+}
+}
+]
+}
+
+print frozenset(kubeConfig)
+
+with open('minikube.yml', 'w') as yaml_file:
+  yaml_file.write(yaml.dump(frozenset(kubeConfig), default_flow_style=False))
+
+#edit docker-compose
+# home = expanduser("~")
+#
+# with open('docker-compose.yml', 'r') as f:
+#   compose = yaml.load(f.read())
+#
+#
+#
+# with open('docker-compose.yml', 'w') as yaml_file:
+#   yaml_file.write(yaml.dump(compose, default_flow_style=False))

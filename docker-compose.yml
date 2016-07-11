@@ -51,10 +51,9 @@ services:
     volumes_from:
      - configdata
     volumes:
-     - /Users/chadmoon/.kube/config:/root/.kube/config
-     - /Users/chadmoon/.kube/minikube:/root/.kube/minikube
-     - /Users/chadmoon/.minikube/apiserver.crt:/root/.kube/apiserver.crt
-     - /Users/chadmoon/.minikube/apiserver.key:/root/.kube/apiserver.key
+     - ~/.kube/config:/root/.kube/config
+     - ~/.minikube/apiserver.crt:/root/.kube/apiserver.crt
+     - ~/.minikube/apiserver.key:/root/.kube/apiserver.key
     depends_on:
      - front50
      - redis
@@ -102,7 +101,7 @@ services:
      - echo
     volumes_from:
      - configdata
-     
+
   deck:
     image: nginx
     networks:
