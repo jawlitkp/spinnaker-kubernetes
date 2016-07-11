@@ -13,6 +13,7 @@ This is a collection of scripts and a docker-compose file that helps streamline 
 2. Docker-compose (this is included in the docker for mac beta) https://docs.docker.com/compose/install/
 3. Ensure you have 8GB memory provisioned for the vm if using docker for mac beta.
 
+
 # Instructions
 
 1. Run `python launch.py`

@@ -27,64 +27,35 @@ os.system("curl -Lo minikube https://storage.googleapis.com/minikube/releases/v0
 #cleanup
 os.system("docker-compose down")
 os.system("minikube stop")
+os.system("minikube delete")
 
 os.system("minikube start")
+ip = os.popen('minikube ip').read().rstrip()
 
-#write minikube config file
-kubeConfig = dict(
-    'apiVersion' = '1',
-    'clusters' = [
-      dict(
-        'cluster' = dict(
-          'certificate-authority' = '/root/.kube/apiserver.crt',
-          'server' = 'https://192.168.99.100:443'
-        ),
-        'name' = 'minikube'
-      )
-    ],
-    'contexts' = [
-      dict(
-        'context' = dict(
-          'cluster' = 'minikube',
-          'user' = 'minikube'
-        ),
-        'name' = 'minikube'
-      )
-    ],
-    'current-context' = 'minikube',
-    'kind' = 'Config',
-    'preferences' = '{}',
-    'users' = [
-      dict(
-        'user' = dict(
-          'client-certificate' = '/root/.kube/apiserver.crt',
-          'client-key' = '/root/.kube/apiserver.key'
-        ),
-        'name' = 'minikube'
-      )
-    ]
-)
+kubeConfig = """\
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority: /root/.kube/apiserver.crt
+    server: https://""" + ip + """:443
+  name: minikube
+contexts:
+- context:
+    cluster: minikube
+    user: minikube
+  name: minikube
+current-context: minikube
+kind: Config
+preferences: {}
+users:
+- name: minikube
+  user:
+    client-certificate: /root/.kube/apiserver.crt
+    client-key: /root/.kube/apiserver.key
+"""
 
-
-# apiVersion: v1
-# clusters:
-# - cluster:
-#     certificate-authority: /root/.kube/apiserver.crt
-#     server: https://192.168.99.100:443
-#   name: minikube
-# contexts:
-# - context:
-#     cluster: minikube
-#     user: minikube
-#   name: minikube
-# current-context: minikube
-# kind: Config
-# preferences: {}
-# users:
-# - name: minikube
-#   user:
-#     client-certificate: /root/.kube/apiserver.crt
-#     client-key: /root/.kube/apiserver.key
+with open("minikube.config", "w") as text_file:
+  text_file.write(kubeConfig)
 
 os.system("docker-compose up -d pingbox")
 os.system("docker-compose up -d configdata")
@@ -103,3 +74,4 @@ startContainer("gate",8084)
 os.system("docker-compose up -d deck")
 time.sleep(2)
 os.system("open http://localhost:9000")
+os.system("minikube dashboard")

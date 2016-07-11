@@ -51,7 +51,7 @@ services:
     volumes_from:
      - configdata
     volumes:
-     - ~/.kube/config:/root/.kube/config
+     - ./minikube.config:/root/.kube/config
      - ~/.minikube/apiserver.crt:/root/.kube/apiserver.crt
      - ~/.minikube/apiserver.key:/root/.kube/apiserver.key
     depends_on:
